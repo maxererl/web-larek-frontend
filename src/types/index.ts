@@ -1,3 +1,4 @@
+import { Api } from "../components/base/api";
 import { IEvents } from "../components/base/events";
 
 type Product = {
@@ -35,7 +36,7 @@ type Order = {
   total: number
 }
 
-interface IProductApi {
+interface IProductApi extends Api {
   getProductList(): Promise<Product[]>;
   getProduct(id: string): Promise<Product>;
   makeOrder(orderInfo: OrderInfo): Promise<Order>;
@@ -49,10 +50,10 @@ interface IBascetModel {
   clear(): void;
 }
 
-interface IFormModel<T, R> {
+interface IFormModel<T> {
   formData: T;
   validate(uncheckedFormData: Partial<T>): ValidityState;
-  submit(): Promise<R>;
+  submit(): void;
 }
 
 interface IViewConstructor {
