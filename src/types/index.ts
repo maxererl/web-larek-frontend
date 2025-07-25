@@ -1,7 +1,7 @@
 import { Api } from "../components/base/api";
 import { IEvents } from "../components/base/events";
 
-type Product = {
+export type Product = {
   id: string,
   description: string,
   image: string,
@@ -10,79 +10,115 @@ type Product = {
   price: number
 }
 
-type OrderData = {
+export type OrderData = {
   payment: string,
   address: string
 }
 
-type ContactData = {
+export type ContactData = {
   email: string,
   phone: string
 }
 
-interface OrderFormData {
+export interface OrderFormData {
   order: OrderData;
   contact: ContactData;
 }
 
-type OrderInfo = {
+export type OrderInfo = {
   orderData: OrderFormData,
   total: number,
-  items: Map<string, number>;
+  items: Map<string, Product>;
 }
 
-type Order = {
+export type Order = {
   id: string,
   total: number
 }
 
-interface IProductApi extends Api {
-  getProductList(): Promise<Product[]>;
-  getProduct(id: string): Promise<Product>;
-  makeOrder(orderInfo: OrderInfo): Promise<Order>;
+export abstract class AbstractProductApi extends Api {
+  abstract getProductList(): Promise<Product[]>;
+  abstract getProduct(id: string): Promise<Product>;
 }
 
-interface IBascetModel {
-  _items: Map<string, number>;
-  add(id: string): void;
+export abstract class AbstractOrderApi extends Api {
+  abstract makeOrder(orderInfo: OrderInfo): Promise<Order>;
+}
+
+export type ProductApiResponse = {
+  total: number,
+  items: Product[]
+}
+
+export interface IBasketModel {
+  _items: Map<string, Product>;
+  add(product: Product): void;
   remove(id: string): void;
-  getItems(): Map<string, number>;
+  getItems(): Product[];
   clear(): void;
 }
 
-interface IFormModel<T> {
-  formData: T;
-  validate(uncheckedFormData: Partial<T>): ValidityState;
-  submit(): void;
+export abstract class IFormModel<T> {
+  protected static formData: OrderInfo = {
+    orderData: {
+      order: {
+        payment: '',
+        address: ''
+      },
+      contact: {
+        email: '',
+        phone: ''
+      }
+    },
+    total: 0,
+    items: undefined
+  };
+  abstract updateFormData(data: T): void;
+  static getFormData(): OrderInfo {
+    return IFormModel.formData;
+  }
+  static updateFormItems(data: Product[]): void {
+    IFormModel.formData.items = new Map(data.map(item => [item.id, item]));
+  }
+  static updateFormTotal(total: number): void {
+    IFormModel.formData.total = total;
+  }
 }
 
-interface IViewConstructor {
-  new (container: HTMLElement, events?: IEvents): IView;
+export interface IViewConstructor<T, E extends HTMLElement> {
+  new (options: Record<string, string>): IView<T, E>;
 }
 
-interface IView {
-  render(data?: object): HTMLElement;
+export interface IView<T, E extends HTMLElement> {
+  _options: Record<string, any>;
+  render(data?: T): E;
 }
 
-interface IFormView extends IView {
-  displayValidationError(fieldName: string, errorMessage: string): void;
+export type CardViewOptions = {
+  CDN_URL: string,
+  cardTemplateElement: HTMLTemplateElement,
+  cardsParentElement: HTMLElement,
+  cardBlock: string,
+  cardElements: Record<string, string>,
+  cardCategoryModifiers: Record<string, string>,
+  cardNullPricePlaceholder: string
+};
+
+export interface IFormView<T> extends IView<T, HTMLFormElement> {
+  checkValidity(formElement: HTMLFormElement, ...inputs: any): boolean;
 }
 
-interface IModalView<T extends HTMLElement, D> {
-  _template: T;
+export type ModalData<D, E extends HTMLElement> = {
+  data: D,
+  cnstr: IViewConstructor<D, E>,
+  options: Record<string, any>
+}
 
-  open(data: D): void;
+export interface IModalView<D, E extends HTMLElement> {
+  _options: Record<string, any>;
+
+  open(data: D, cnstr: IViewConstructor<D, E>, options: Record<string, any>): void;
   close(): void;
 }
 
-type ProductEvent = {
-  id: string
-}
 
-type OrderEvent = {
-  orderData: OrderData
-}
-
-type ContactEvent = {
-  contactData: ContactData
-}
