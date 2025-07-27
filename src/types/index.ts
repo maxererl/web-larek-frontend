@@ -1,5 +1,5 @@
-import { Api } from "../components/base/api";
-import { IEvents } from "../components/base/events";
+import { Api } from "../components/api/api";
+import { bem, cloneTemplate } from "../utils/utils";
 
 export type Product = {
   id: string,
@@ -106,6 +106,47 @@ export type CardViewOptions = {
 
 export interface IFormView<T> extends IView<T, HTMLFormElement> {
   checkValidity(formElement: HTMLFormElement, ...inputs: any): boolean;
+}
+
+export abstract class FormView<T> implements IFormView<T> {
+  constructor(public _options: Record<string, any>) {}
+
+  abstract render(data?: T): HTMLFormElement;
+  abstract checkValidity(formElement: HTMLFormElement, ...inputs: any): boolean;
+
+  protected setupForm(data?: T): HTMLFormElement {
+    const formElement = cloneTemplate<HTMLFormElement>(this._options.templateElement);
+    const submitButton = formElement.querySelector<HTMLButtonElement>('[type="submit"]');
+    
+    this.setupSubmitButton(submitButton);
+    this._options.parentElement.append(formElement);
+    
+    return formElement;
+  }
+
+  protected setupSubmitButton(submitButton: HTMLButtonElement): void {
+    submitButton.addEventListener('click', (event: MouseEvent) => {
+      event.preventDefault();
+      this._options.events.emit(this.getSubmitEventName());
+    });
+  }
+
+  protected abstract getSubmitEventName(): string;
+
+  protected displayValidationError(errorsElement: HTMLElement, errorMessage: string): void {
+    errorsElement.textContent = errorMessage;
+  }
+
+  protected toggleSubmitButtonState(button: HTMLButtonElement, isValid: boolean): void {
+    button.disabled = !isValid;
+  }
+
+  protected getErrorsElement(formElement: HTMLFormElement): HTMLElement {
+    return formElement.querySelector<HTMLElement>(bem(
+      this._options.formBlock,
+      this._options.formElements.errors
+    ).class);
+  }
 }
 
 export type ModalData<D, E extends HTMLElement> = {

@@ -11,6 +11,7 @@
 - src/ — исходные файлы проекта
 - src/components/ — папка с JS компонентами
 - src/components/base/ — папка с базовым кодом
+- src/components/base/ — папка с апи сервисами
 - src/components/model/ — папка с моделями данных
 - src/components/view/ — папка с представлениями
 
@@ -73,6 +74,36 @@ yarn build
 ---
 
 ## Базовые классы
+
+### Абстрактный класс `FormView<T>`
+
+Базовый абстрактный класс для всех форм приложения. Реализует интерфейс `IFormView<T>` и предоставляет общую функциональность для работы с формами.
+
+**Конструктор:**
+
+```typescript
+constructor(public _options: Record<string, any>)
+```
+
+- `_options` — настройки формы (шаблон, родительский элемент, CSS-классы, события)
+
+**Свойства:**
+
+- `_options: Record<string, any>` — конфигурация представления
+
+**Абстрактные методы:**
+
+- `abstract render(data?: T): HTMLFormElement` — создает и отображает форму
+- `abstract checkValidity(formElement: HTMLFormElement, ...inputs: any): boolean` — проверяет валидность формы
+- `protected abstract getSubmitEventName(): string` — возвращает имя события для отправки формы
+
+**Защищенные методы:**
+
+- `protected setupForm(data?: T): HTMLFormElement` — создает базовую структуру формы из шаблона
+- `protected setupSubmitButton(submitButton: HTMLButtonElement): void` — настраивает обработчик кнопки отправки
+- `protected displayValidationError(errorsElement: HTMLElement, errorMessage: string): void` — отображает ошибки валидации
+- `protected toggleSubmitButtonState(button: HTMLButtonElement, isValid: boolean): void` — управляет состоянием кнопки отправки
+- `protected getErrorsElement(formElement: HTMLFormElement): HTMLElement` — получает элемент для отображения ошибок
 
 ### Класс `Api`
 
@@ -345,7 +376,7 @@ constructor(public _options: Record<string, any>)
 
 ### Класс `OrderDataFormView`
 
-Реализует интерфейс `IFormView<OrderData>`. Отображает форму выбора способа оплаты и ввода адреса.
+Наследует абстрактный класс `FormView<OrderData>` и реализует интерфейс `IFormView<OrderData>`. Отображает форму выбора способа оплаты и ввода адреса.
 
 **Конструктор:**
 
@@ -357,16 +388,19 @@ constructor(public _options: Record<string, any>)
 
 **Свойства:**
 
-- `_options: Record<string, any>` — конфигурация представления
+- `_options: Record<string, any>` — конфигурация представления (наследуется от базового класса)
 
 **Методы:**
 
-- `render(data?: OrderData): HTMLFormElement` — создает форму заказа с кнопками выбора оплаты и полем адреса
-- `checkValidity(formElement: HTMLFormElement, buttons: Element[], addressElement: HTMLInputElement, submitButton: HTMLButtonElement): boolean` — проверяет валидность формы (выбран способ оплаты и введен адрес)
+- `render(data?: OrderData): HTMLFormElement` — создает форму заказа с кнопками выбора оплаты и полем адреса, устанавливает обработчики событий
+- `checkValidity(formElement: HTMLFormElement, buttons: Element[], addressElement: HTMLInputElement, submitButton: HTMLButtonElement): boolean` — проверяет валидность формы (выбран способ оплаты и введен адрес), отображает ошибки валидации
+- `protected getSubmitEventName(): string` — возвращает имя события для отправки формы (`'nextFormStep'`)
+- `private setupPaymentButtons()` — настраивает обработчики кликов для кнопок выбора способа оплаты
+- `private setupAddressInput()` — настраивает обработчик ввода для поля адреса
 
 ### Класс `ContactsDataFormView`
 
-Реализует интерфейс `IFormView<ContactData>`. Отображает форму ввода контактных данных.
+Наследует абстрактный класс `FormView<ContactData>` и реализует интерфейс `IFormView<ContactData>`. Отображает форму ввода контактных данных.
 
 **Конструктор:**
 
@@ -378,12 +412,15 @@ constructor(public _options: Record<string, any>)
 
 **Свойства:**
 
-- `_options: Record<string, any>` — конфигурация представления
+- `_options: Record<string, any>` — конфигурация представления (наследуется от базового класса)
 
 **Методы:**
 
-- `render(data?: ContactData): HTMLFormElement` — создает форму с полями email и телефона
-- `checkValidity(formElement: HTMLFormElement, emailElement: HTMLInputElement, phoneElement: HTMLInputElement, submitButton: HTMLButtonElement): boolean` — проверяет заполненность обязательных полей
+- `render(data?: ContactData): HTMLFormElement` — создает форму с полями email и телефона, устанавливает обработчики событий
+- `checkValidity(formElement: HTMLFormElement, emailElement: HTMLInputElement, phoneElement: HTMLInputElement, submitButton: HTMLButtonElement): boolean` — проверяет заполненность обязательных полей, отображает ошибки валидации
+- `protected getSubmitEventName(): string` — возвращает имя события для отправки формы (`'formSubmit'`)
+- `private setupEmailInput()` — настраивает обработчик ввода для поля email
+- `private setupPhoneInput()` — настраивает обработчик ввода для поля телефона
 
 ### Класс `SuccessView`
 

@@ -9,11 +9,24 @@ export class ModalView<D, E extends HTMLElement> implements IModalView<D, E> {
 
   open(data: D, cnstr: IViewConstructor<D, E>, options: Record<string, any>): void {
     this.clearModalContent(); // Clear previous content
+
     options.parentElement = this._options.modalContainer.querySelector(bem (
       this._options.modalBlock, 
       this._options.modalElements.content
     ).class);
     new cnstr(options).render(data);
+
+    document.querySelector( bem(
+      this._options.modalBlock,
+      this._options.modalElements.closeButton
+    ).class).addEventListener('click', () => {
+      this._options.events.emit('closeModal');
+    });
+    
+    this._options.modalContainer.addEventListener('mousedown', (event: MouseEvent) => {
+      if (event.target === this._options.modalContainer) this._options.events.emit('closeModal');
+    });
+
     this._options.modalContainer.classList.add(bem (
       this._options.modalBlock,
       undefined,

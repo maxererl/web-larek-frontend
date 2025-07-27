@@ -1,5 +1,5 @@
 import './scss/styles.scss';
-import { ProductApi } from './components/model/ProductModel.';
+import { ProductApi } from './components/api/ProductApi';
 import { ProductCardPreviewView, ProductCardView } from './components/view/ProductView';
 import { CardViewOptions, ContactData, IFormModel, ModalData, Order, OrderData, Product } from './types';
 import { API_URL, CDN_URL } from './utils/constants';
@@ -8,8 +8,9 @@ import { EventEmitter } from './components/base/events';
 import { BasketModel } from './components/model/BasketModel';
 import { BasketView } from './components/view/BasketView';
 import { ContactsDataFormView, OrderDataFormView } from './components/view/FormView';
-import { ContactDataFormModel, OrderApi, OrderDataFormModel } from './components/model/FormModel';
+import { ContactDataFormModel, OrderDataFormModel } from './components/model/FormModel';
 import { SuccessView } from './components/view/SuccessView';
+import { OrderApi } from './components/api/OrderApi';
 
 const productApi = new ProductApi(API_URL);
 const basket = new BasketModel();
@@ -178,6 +179,7 @@ const modalBlock = 'modal';
 
 const modalElements: Record<string, string> = {
   content: 'content',
+  closeButton: 'close'
 }
 
 const modalModifiers: Record<string, string> = {
@@ -190,14 +192,15 @@ const modalViewOptions: Record<string, any> = {
   modalContainer,
   modalBlock,
   modalElements,
-  modalModifiers
+  modalModifiers,
+  events: eventEmitter
 }
 
 const cardView = new ProductCardView(cardViewOptions);
 
-productApi.getProductList().then(products => 
-  products.forEach(product => cardView.render(product))
-);
+productApi.getProductList()
+  .then(products => products.forEach(product => cardView.render(product)))
+  .catch(error => console.error('Ошибка при загрузке списка продуктов:', error));
 
 const modalView = new ModalView(modalViewOptions);
 
@@ -250,7 +253,8 @@ eventEmitter.on('formSubmit', () => {
   contactsDataFormModel.submit()
     .then(order => eventEmitter.emit('orderSuccess', order))
     .then(() => basket.clear())
-    .then(() => headerBasketCounter.textContent = '0');
+    .then(() => headerBasketCounter.textContent = '0')
+    .catch(error => console.error('Ошибка при отправке заказа:', error));
 })
 
 eventEmitter.on('orderSuccess', (order: Order) => {
@@ -258,18 +262,6 @@ eventEmitter.on('orderSuccess', (order: Order) => {
 })
 
 // Add event listeners
-
-document.querySelectorAll('.modal__close').forEach(button => {
-  button.addEventListener('click', () => {
-    eventEmitter.emit('closeModal');
-  });
-});
-
-modalContainer.addEventListener('mousedown', (event) => {
-  if (event.target === modalContainer) {
-    eventEmitter.emit('closeModal');
-  }
-});
 
 headerBasketElement.addEventListener('click', () => {
   eventEmitter.emit('openBasketModal', {
